@@ -52,6 +52,37 @@ RSpec.describe Philiprehberger::EventStore do
       events.clear
       expect(store.read(:orders).length).to eq(1)
     end
+
+    it 'treats symbol and string stream names as equivalent' do
+      store.append(:orders, { type: 'symbol' })
+      store.append('orders', { type: 'string' })
+      expect(store.read(:orders).length).to eq(2)
+      expect(store.read('orders').length).to eq(2)
+    end
+
+    it 'returns self from append for chaining' do
+      result = store.append(:stream, { a: 1 })
+      expect(result).to eq(store)
+    end
+
+    it 'chains multiple appends' do
+      store.append(:s, { a: 1 }).append(:s, { b: 2 }).append(:s, { c: 3 })
+      expect(store.read(:s).length).to eq(3)
+    end
+
+    it 'preserves event ordering' do
+      5.times { |i| store.append(:seq, { index: i }) }
+      events = store.read(:seq)
+      expect(events.map { |e| e[:index] }).to eq([0, 1, 2, 3, 4])
+    end
+
+    it 'stores any event type' do
+      store.append(:misc, 'plain string')
+      store.append(:misc, 42)
+      store.append(:misc, [1, 2, 3])
+      events = store.read(:misc)
+      expect(events).to eq(['plain string', 42, [1, 2, 3]])
+    end
   end
 
   describe '#read_all' do
@@ -68,6 +99,14 @@ RSpec.describe Philiprehberger::EventStore do
 
     it 'returns empty array when no events exist' do
       expect(store.read_all).to eq([])
+    end
+
+    it 'includes events from all streams' do
+      store.append(:a, 'event_a')
+      store.append(:b, 'event_b')
+      store.append(:c, 'event_c')
+      all = store.read_all
+      expect(all).to include('event_a', 'event_b', 'event_c')
     end
   end
 
@@ -99,6 +138,42 @@ RSpec.describe Philiprehberger::EventStore do
       store.append(:users, { type: 'user' })
       expect(received).to be_empty
     end
+
+    it 'notifies for each event appended' do
+      received = []
+      store.subscribe(:orders) { |e| received << e }
+
+      store.append(:orders, { type: 'a' })
+      store.append(:orders, { type: 'b' })
+      store.append(:orders, { type: 'c' })
+      expect(received.length).to eq(3)
+    end
+
+    it 'returns self for chaining' do
+      result = store.subscribe(:orders) { |_e| nil }
+      expect(result).to eq(store)
+    end
+
+    it 'does not notify for events before subscription' do
+      store.append(:orders, { type: 'before' })
+
+      received = []
+      store.subscribe(:orders) { |e| received << e }
+      expect(received).to be_empty
+    end
+
+    it 'handles subscribers on different streams independently' do
+      orders_received = []
+      users_received = []
+      store.subscribe(:orders) { |e| orders_received << e }
+      store.subscribe(:users) { |e| users_received << e }
+
+      store.append(:orders, 'order_event')
+      store.append(:users, 'user_event')
+
+      expect(orders_received).to eq(['order_event'])
+      expect(users_received).to eq(['user_event'])
+    end
   end
 
   describe '#project' do
@@ -126,6 +201,27 @@ RSpec.describe Philiprehberger::EventStore do
       result = store.project(:test, initial: nil) { |_state, e| e[:value] }
       expect(result).to eq(42)
     end
+
+    it 'builds a list via projection' do
+      store.append(:items, { name: 'a' })
+      store.append(:items, { name: 'b' })
+      store.append(:items, { name: 'c' })
+
+      names = store.project(:items, initial: []) do |acc, event|
+        acc + [event[:name]]
+      end
+      expect(names).to eq(%w[a b c])
+    end
+
+    it 'builds a hash via projection' do
+      store.append(:config, { key: 'host', value: 'localhost' })
+      store.append(:config, { key: 'port', value: 5432 })
+
+      result = store.project(:config, initial: {}) do |acc, event|
+        acc.merge(event[:key] => event[:value])
+      end
+      expect(result).to eq({ 'host' => 'localhost', 'port' => 5432 })
+    end
   end
 
   describe '#streams' do
@@ -141,6 +237,19 @@ RSpec.describe Philiprehberger::EventStore do
     it 'returns empty array when no streams exist' do
       expect(store.streams).to eq([])
     end
+
+    it 'does not include duplicate stream names' do
+      store.append(:orders, { a: 1 })
+      store.append(:orders, { b: 2 })
+      expect(store.streams).to eq(['orders'])
+    end
+
+    it 'returns a copy of stream names' do
+      store.append(:orders, {})
+      names = store.streams
+      names.clear
+      expect(store.streams).to eq(['orders'])
+    end
   end
 
   describe 'thread safety' do
@@ -153,6 +262,19 @@ RSpec.describe Philiprehberger::EventStore do
       threads.each(&:join)
 
       expect(store.read(:stream).length).to eq(1000)
+    end
+
+    it 'handles concurrent reads and writes' do
+      threads = []
+      threads += 5.times.map do |i|
+        Thread.new { 50.times { |j| store.append(:stream, { id: "#{i}-#{j}" }) } }
+      end
+      threads += 5.times.map do
+        Thread.new { 50.times { store.read(:stream) } }
+      end
+      threads.each(&:join)
+
+      expect(store.read(:stream).length).to eq(250)
     end
   end
 end

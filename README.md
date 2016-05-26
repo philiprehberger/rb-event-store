@@ -3,6 +3,7 @@
 [![Tests](https://github.com/philiprehberger/rb-event-store/actions/workflows/ci.yml/badge.svg)](https://github.com/philiprehberger/rb-event-store/actions/workflows/ci.yml)
 [![Gem Version](https://badge.fury.io/rb/philiprehberger-event_store.svg)](https://rubygems.org/gems/philiprehberger-event_store)
 [![License](https://img.shields.io/github/license/philiprehberger/rb-event-store)](LICENSE)
+[![Sponsor](https://img.shields.io/badge/sponsor-GitHub%20Sponsors-ec6cb9)](https://github.com/sponsors/philiprehberger)
 
 In-memory event store with streams, projections, and subscriptions
 

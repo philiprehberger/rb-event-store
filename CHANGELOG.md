@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-03-27
+
+### Added
+- Event querying with `#query(stream:, type:, after:, before:, limit:)` for filtered reads
+- Event snapshots via `#snapshot(stream, state)` to save aggregate state at a version
+- Snapshot-based loading via `#load_from_snapshot(stream)` to rebuild from snapshot + newer events
+- Stream replay via `#replay(stream, from_version:)` to re-emit events to subscribers
+- Global replay via `#replay_all(from_position:)` across all streams
+- Stream version tracking via `#version(stream)` returning event count
+- Global position tracking for cross-stream event ordering
+- Timestamp metadata on all events for time-based querying
+- Support section with LinkedIn and packages badges in README
+- All 8 standard badges in README
+
 ## [0.1.1] - 2026-03-22
 
 ### Changed

@@ -252,6 +252,128 @@ RSpec.describe Philiprehberger::EventStore do
     end
   end
 
+  describe '#query' do
+    let(:store) { described_class.new }
+
+    it 'returns all events when no filters' do
+      store.append(:orders, { type: 'created', id: 1 })
+      store.append(:orders, { type: 'shipped', id: 1 })
+      expect(store.query.size).to eq(2)
+    end
+
+    it 'filters by stream' do
+      store.append(:orders, { id: 1 })
+      store.append(:users, { id: 2 })
+      expect(store.query(stream: :orders).size).to eq(1)
+    end
+
+    it 'filters by type string' do
+      store.append(:orders, { type: 'created', id: 1 })
+      store.append(:orders, { type: 'shipped', id: 1 })
+      result = store.query(type: 'created')
+      expect(result.size).to eq(1)
+      expect(result.first[:type]).to eq('created')
+    end
+
+    it 'limits results' do
+      5.times { |i| store.append(:events, { n: i }) }
+      expect(store.query(limit: 3).size).to eq(3)
+    end
+
+    it 'returns empty for non-existent stream' do
+      expect(store.query(stream: :nonexistent)).to eq([])
+    end
+  end
+
+  describe '#snapshot and #load_from_snapshot' do
+    let(:store) { described_class.new }
+
+    it 'saves and loads a snapshot' do
+      store.append(:orders, { type: 'created', total: 10 })
+      store.append(:orders, { type: 'updated', total: 20 })
+      store.snapshot(:orders, { count: 2, total: 20 })
+
+      store.append(:orders, { type: 'updated', total: 30 })
+
+      result = store.load_from_snapshot(:orders) do |state, event|
+        { count: state[:count] + 1, total: event[:total] }
+      end
+      expect(result[:count]).to eq(3)
+      expect(result[:total]).to eq(30)
+    end
+
+    it 'falls back to full projection when no snapshot exists' do
+      store.append(:orders, { total: 10 })
+      store.append(:orders, { total: 20 })
+
+      result = store.load_from_snapshot(:orders, initial: 0) do |acc, event|
+        acc + event[:total]
+      end
+      expect(result).to eq(30)
+    end
+  end
+
+  describe '#replay' do
+    let(:store) { described_class.new }
+
+    it 'replays events to subscribers' do
+      events = []
+      store.subscribe(:orders) { |e| events << e }
+      store.append(:orders, { id: 1 })
+      store.append(:orders, { id: 2 })
+      events.clear
+
+      store.replay(:orders)
+      expect(events.size).to eq(2)
+    end
+
+    it 'replays from a specific version' do
+      events = []
+      store.subscribe(:orders) { |e| events << e }
+      store.append(:orders, { id: 1 })
+      store.append(:orders, { id: 2 })
+      store.append(:orders, { id: 3 })
+      events.clear
+
+      store.replay(:orders, from_version: 1)
+      expect(events.size).to eq(2)
+      expect(events.map { |e| e[:id] }).to eq([2, 3])
+    end
+  end
+
+  describe '#replay_all' do
+    let(:store) { described_class.new }
+
+    it 'replays all events across streams' do
+      order_events = []
+      user_events = []
+      store.subscribe(:orders) { |e| order_events << e }
+      store.subscribe(:users) { |e| user_events << e }
+      store.append(:orders, { id: 1 })
+      store.append(:users, { id: 2 })
+      order_events.clear
+      user_events.clear
+
+      store.replay_all
+      expect(order_events.size).to eq(1)
+      expect(user_events.size).to eq(1)
+    end
+  end
+
+  describe '#version' do
+    let(:store) { described_class.new }
+
+    it 'returns 0 for empty stream' do
+      expect(store.version(:orders)).to eq(0)
+    end
+
+    it 'returns event count' do
+      store.append(:orders, { id: 1 })
+      store.append(:orders, { id: 2 })
+      expect(store.version(:orders)).to eq(2)
+    end
+  end
+
   describe 'thread safety' do
     let(:store) { described_class.new }
 

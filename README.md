@@ -2,12 +2,7 @@
 
 [![Tests](https://github.com/philiprehberger/rb-event-store/actions/workflows/ci.yml/badge.svg)](https://github.com/philiprehberger/rb-event-store/actions/workflows/ci.yml)
 [![Gem Version](https://badge.fury.io/rb/philiprehberger-event_store.svg)](https://rubygems.org/gems/philiprehberger-event_store)
-[![GitHub release](https://img.shields.io/github/v/release/philiprehberger/rb-event-store)](https://github.com/philiprehberger/rb-event-store/releases)
 [![Last updated](https://img.shields.io/github/last-commit/philiprehberger/rb-event-store)](https://github.com/philiprehberger/rb-event-store/commits/main)
-[![License](https://img.shields.io/github/license/philiprehberger/rb-event-store)](LICENSE)
-[![Bug Reports](https://img.shields.io/github/issues/philiprehberger/rb-event-store/bug)](https://github.com/philiprehberger/rb-event-store/issues?q=is%3Aissue+is%3Aopen+label%3Abug)
-[![Feature Requests](https://img.shields.io/github/issues/philiprehberger/rb-event-store/enhancement)](https://github.com/philiprehberger/rb-event-store/issues?q=is%3Aissue+is%3Aopen+label%3Aenhancement)
-[![Sponsor](https://img.shields.io/badge/sponsor-GitHub%20Sponsors-ec6cb9)](https://github.com/sponsors/philiprehberger)
 
 In-memory event store with streams, projections, subscriptions, snapshots, and replay
 
@@ -152,10 +147,21 @@ bundle exec rubocop
 
 ## Support
 
-If you find this package useful, consider giving it a star on GitHub — it helps motivate continued maintenance and development.
+If you find this project useful:
 
-[![LinkedIn](https://img.shields.io/badge/Philip%20Rehberger-LinkedIn-0A66C2?logo=linkedin)](https://www.linkedin.com/in/philiprehberger)
-[![More packages](https://img.shields.io/badge/more-open%20source%20packages-blue)](https://philiprehberger.com/open-source-packages)
+⭐ [Star the repo](https://github.com/philiprehberger/rb-event-store)
+
+🐛 [Report issues](https://github.com/philiprehberger/rb-event-store/issues?q=is%3Aissue+is%3Aopen+label%3Abug)
+
+💡 [Suggest features](https://github.com/philiprehberger/rb-event-store/issues?q=is%3Aissue+is%3Aopen+label%3Aenhancement)
+
+❤️ [Sponsor development](https://github.com/sponsors/philiprehberger)
+
+🌐 [All Open Source Projects](https://philiprehberger.com/open-source-packages)
+
+💻 [GitHub Profile](https://github.com/philiprehberger)
+
+🔗 [LinkedIn Profile](https://www.linkedin.com/in/philiprehberger)
 
 ## License
 

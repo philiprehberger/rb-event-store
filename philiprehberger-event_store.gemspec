@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
 
   spec.summary = 'In-memory event store with streams, projections, and subscriptions'
   spec.description = 'Thread-safe in-memory event store for CQRS patterns. Supports named streams, ' \
-                       'event appending, stream reading, subscriber notifications, and state projections.'
+                     'event appending, stream reading, subscriber notifications, and state projections.'
   spec.homepage = 'https://philiprehberger.com/open-source-packages/ruby/philiprehberger-event_store'
   spec.license = 'MIT'
 

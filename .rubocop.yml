@@ -1,0 +1,16 @@
+AllCops:
+  TargetRubyVersion: 3.1
+  NewCops: enable
+  SuggestExtensions: false
+Style:
+  Enabled: false
+Metrics:
+  Enabled: false
+Naming:
+  Enabled: false
+Lint:
+  Enabled: false
+Layout:
+  Enabled: false
+Bundler/OrderedGems:
+  Enabled: false

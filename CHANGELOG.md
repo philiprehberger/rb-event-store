@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-03-22
+
+### Changed
+- Expanded test suite to 30+ examples covering edge cases, error paths, and boundary conditions
+
 ## [0.1.0] - 2026-03-22
 
 ### Added

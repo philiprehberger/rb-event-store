@@ -2,10 +2,14 @@
 
 [![Tests](https://github.com/philiprehberger/rb-event-store/actions/workflows/ci.yml/badge.svg)](https://github.com/philiprehberger/rb-event-store/actions/workflows/ci.yml)
 [![Gem Version](https://badge.fury.io/rb/philiprehberger-event_store.svg)](https://rubygems.org/gems/philiprehberger-event_store)
+[![GitHub release](https://img.shields.io/github/v/release/philiprehberger/rb-event-store)](https://github.com/philiprehberger/rb-event-store/releases)
+[![Last updated](https://img.shields.io/github/last-commit/philiprehberger/rb-event-store)](https://github.com/philiprehberger/rb-event-store/commits/main)
 [![License](https://img.shields.io/github/license/philiprehberger/rb-event-store)](LICENSE)
+[![Bug Reports](https://img.shields.io/github/issues/philiprehberger/rb-event-store/bug)](https://github.com/philiprehberger/rb-event-store/issues?q=is%3Aissue+is%3Aopen+label%3Abug)
+[![Feature Requests](https://img.shields.io/github/issues/philiprehberger/rb-event-store/enhancement)](https://github.com/philiprehberger/rb-event-store/issues?q=is%3Aissue+is%3Aopen+label%3Aenhancement)
 [![Sponsor](https://img.shields.io/badge/sponsor-GitHub%20Sponsors-ec6cb9)](https://github.com/sponsors/philiprehberger)
 
-In-memory event store with streams, projections, and subscriptions
+In-memory event store with streams, projections, subscriptions, snapshots, and replay
 
 ## Requirements
 
@@ -59,11 +63,65 @@ end
 # => 99.99
 ```
 
+### Event Querying
+
+```ruby
+# Filter by stream
+store.query(stream: :orders)
+
+# Filter by event type
+store.query(type: 'OrderPlaced')
+
+# Combine filters with time range and limit
+store.query(stream: :orders, after: 1.hour.ago, limit: 10)
+```
+
+### Snapshots
+
+Save aggregate state at a point in time, then rebuild from the snapshot plus newer events:
+
+```ruby
+# Build state from events
+state = store.project(:orders, initial: { count: 0, total: 0 }) do |s, e|
+  { count: s[:count] + 1, total: s[:total] + (e[:total] || 0) }
+end
+
+# Save a snapshot
+store.snapshot(:orders, state)
+
+# Later, after more events have been appended:
+store.append(:orders, { type: 'OrderPlaced', total: 50 })
+
+# Rebuild from snapshot + new events (avoids replaying entire history)
+rebuilt = store.load_from_snapshot(:orders) do |s, e|
+  { count: s[:count] + 1, total: s[:total] + (e[:total] || 0) }
+end
+```
+
+### Replay
+
+Re-emit past events to current subscribers:
+
+```ruby
+# Replay all events in a stream
+store.replay(:orders)
+
+# Replay from a specific version (0-based index)
+store.replay(:orders, from_version: 5)
+
+# Replay all events across all streams
+store.replay_all
+
+# Replay from a global position
+store.replay_all(from_position: 100)
+```
+
 ### Reading All Events
 
 ```ruby
-store.read_all    # => all events across all streams
-store.streams     # => ['orders', ...]
+store.read_all        # => all events across all streams, ordered by position
+store.streams         # => ['orders', ...]
+store.version(:orders) # => 5 (event count in stream)
 ```
 
 ## API
@@ -74,8 +132,14 @@ store.streams     # => ['orders', ...]
 | `#append(stream, event)` | Append an event to a stream |
 | `#read(stream)` | Read all events from a stream |
 | `#read_all` | Read all events across all streams |
+| `#query(stream:, type:, after:, before:, limit:)` | Query events with filters |
 | `#subscribe(stream) { \|e\| }` | Subscribe to new events on a stream |
 | `#project(stream, initial:) { \|state, e\| }` | Project events into accumulated state |
+| `#snapshot(stream, state)` | Save aggregate state at current stream version |
+| `#load_from_snapshot(stream, initial:) { \|state, e\| }` | Rebuild state from snapshot + newer events |
+| `#replay(stream, from_version:)` | Replay stream events to subscribers |
+| `#replay_all(from_position:)` | Replay all events across streams to subscribers |
+| `#version(stream)` | Return event count for a stream |
 | `#streams` | List all stream names |
 
 ## Development
@@ -86,6 +150,13 @@ bundle exec rspec
 bundle exec rubocop
 ```
 
+## Support
+
+If you find this package useful, consider giving it a star on GitHub — it helps motivate continued maintenance and development.
+
+[![LinkedIn](https://img.shields.io/badge/Philip%20Rehberger-LinkedIn-0A66C2?logo=linkedin)](https://www.linkedin.com/in/philiprehberger)
+[![More packages](https://img.shields.io/badge/more-open%20source%20packages-blue)](https://philiprehberger.com/open-source-packages)
+
 ## License
 
-MIT
+[MIT](LICENSE)

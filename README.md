@@ -111,6 +111,25 @@ store.replay_all
 store.replay_all(from_position: 100)
 ```
 
+### Clearing streams
+
+Remove events (and snapshots) while keeping subscribers registered:
+
+```ruby
+received = []
+store.subscribe(:orders) { |e| received << e }
+store.append(:orders, { type: 'OrderPlaced' })
+
+# Clear a single stream — subscribers stay attached
+store.clear(:orders)
+store.append(:orders, { type: 'OrderPlaced' })
+# subscriber still fires for the new event
+
+# Clear everything — streams and snapshots wiped, subscribers retained,
+# global position reset to zero
+store.clear
+```
+
 ### Reading All Events
 
 ```ruby
@@ -136,6 +155,7 @@ store.version(:orders) # => 5 (event count in stream)
 | `#replay_all(from_position:)` | Replay all events across streams to subscribers |
 | `#version(stream)` | Return event count for a stream |
 | `#streams` | List all stream names |
+| `#clear(stream = nil)` | Remove events and snapshot for a stream, or everything when no stream is passed (subscribers retained) |
 
 ## Development
 

@@ -35,6 +35,32 @@ module Philiprehberger
         self
       end
 
+      # Clear events (and snapshot) for the given stream, or everything when no
+      # stream is passed. Subscribers are retained in both cases. Clearing all
+      # also resets the global position counter.
+      #
+      # @param stream [String, Symbol, nil] the stream name, or nil to clear all
+      # @return [Integer] the number of events removed
+      def clear(stream = nil)
+        @mutex.synchronize do
+          if stream.nil?
+            removed = @streams.values.sum(&:size)
+            @streams.clear
+            @snapshots.clear
+            @global_position = 0
+            removed
+          else
+            key = stream.to_s
+            next 0 unless @streams.key?(key)
+
+            removed = @streams[key].size
+            @streams.delete(key)
+            @snapshots.delete(key)
+            removed
+          end
+        end
+      end
+
       # Read all events from a stream.
       #
       # @param stream [String, Symbol] the stream name

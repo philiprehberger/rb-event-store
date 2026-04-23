@@ -374,6 +374,83 @@ RSpec.describe Philiprehberger::EventStore do
     end
   end
 
+  describe '#clear' do
+    let(:store) { described_class.new }
+
+    it 'removes events for the given stream but leaves other streams intact' do
+      store.append(:orders, { id: 1 })
+      store.append(:orders, { id: 2 })
+      store.append(:users, { id: 3 })
+
+      store.clear(:orders)
+
+      expect(store.read(:orders)).to eq([])
+      expect(store.read(:users).length).to eq(1)
+    end
+
+    it 'is a no-op when the stream does not exist' do
+      expect { store.clear(:nonexistent) }.not_to raise_error
+      expect(store.clear(:nonexistent)).to eq(0)
+    end
+
+    it 'empties all streams and snapshots when called with no argument' do
+      store.append(:orders, { id: 1 })
+      store.append(:users, { id: 2 })
+      store.snapshot(:orders, { count: 1 })
+
+      store.clear
+
+      expect(store.read(:orders)).to eq([])
+      expect(store.read(:users)).to eq([])
+      expect(store.streams).to eq([])
+      expect(store.load_from_snapshot(:orders, initial: :none) { |s, _e| s }).to eq(:none)
+    end
+
+    it 'retains subscribers after clearing a specific stream' do
+      received = []
+      store.subscribe(:orders) { |e| received << e }
+      store.append(:orders, { id: 1 })
+
+      store.clear(:orders)
+      store.append(:orders, { id: 2 })
+
+      expect(received.map { |e| e[:id] }).to eq([1, 2])
+    end
+
+    it 'retains subscribers after clearing all streams' do
+      received = []
+      store.subscribe(:orders) { |e| received << e }
+      store.append(:orders, { id: 1 })
+
+      store.clear
+      store.append(:orders, { id: 2 })
+
+      expect(received.map { |e| e[:id] }).to eq([1, 2])
+    end
+
+    it 'resets the global position after a full clear' do
+      store.append(:orders, { id: 1 })
+      store.append(:users, { id: 2 })
+
+      store.clear
+      store.append(:orders, { id: 3 })
+
+      all = store.query(stream: :orders)
+      expect(all.length).to eq(1)
+      expect(store.read_all.length).to eq(1)
+    end
+
+    it 'removes snapshots for the cleared stream' do
+      store.append(:orders, { total: 10 })
+      store.snapshot(:orders, { total: 10 })
+
+      store.clear(:orders)
+
+      result = store.load_from_snapshot(:orders, initial: :missing) { |s, _e| s }
+      expect(result).to eq(:missing)
+    end
+  end
+
   describe 'thread safety' do
     let(:store) { described_class.new }
 

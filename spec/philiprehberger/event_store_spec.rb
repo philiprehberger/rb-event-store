@@ -374,6 +374,34 @@ RSpec.describe Philiprehberger::EventStore do
     end
   end
 
+  describe '#total_events' do
+    let(:store) { described_class.new }
+
+    it 'returns 0 for an empty store' do
+      expect(store.total_events).to eq(0)
+    end
+
+    it 'counts events in a single stream' do
+      store.append(:orders, { id: 1 })
+      store.append(:orders, { id: 2 })
+      expect(store.total_events).to eq(2)
+    end
+
+    it 'sums events across all streams' do
+      store.append(:orders, { id: 1 })
+      store.append(:users, { id: 2 })
+      store.append(:users, { id: 3 })
+      expect(store.total_events).to eq(3)
+    end
+
+    it 'drops to 0 after clear' do
+      store.append(:orders, { id: 1 })
+      store.append(:users, { id: 2 })
+      store.clear
+      expect(store.total_events).to eq(0)
+    end
+  end
+
   describe '#clear' do
     let(:store) { described_class.new }
 

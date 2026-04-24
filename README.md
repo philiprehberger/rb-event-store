@@ -136,6 +136,7 @@ store.clear
 store.read_all        # => all events across all streams, ordered by position
 store.streams         # => ['orders', ...]
 store.version(:orders) # => 5 (event count in stream)
+store.total_events    # => 8 (sum of events across all streams)
 ```
 
 ## API
@@ -154,6 +155,7 @@ store.version(:orders) # => 5 (event count in stream)
 | `#replay(stream, from_version:)` | Replay stream events to subscribers |
 | `#replay_all(from_position:)` | Replay all events across streams to subscribers |
 | `#version(stream)` | Return event count for a stream |
+| `#total_events` | Total number of events across all streams |
 | `#streams` | List all stream names |
 | `#clear(stream = nil)` | Remove events and snapshot for a stream, or everything when no stream is passed (subscribers retained) |
 

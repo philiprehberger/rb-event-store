@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-04-24
+
+### Added
+- `Store#total_events` — total number of events across all streams (thread-safe); companion to `#version(stream)` at the whole-store level
+
 ## [0.3.0] - 2026-04-18
 
 ### Added

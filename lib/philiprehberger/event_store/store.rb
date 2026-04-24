@@ -227,6 +227,16 @@ module Philiprehberger
         @mutex.synchronize { (@streams[stream] || []).size }
       end
 
+      # Total number of events across all streams.
+      #
+      # Companion to `#version(stream)` at the whole-store level; useful for
+      # dashboard-style total counters.
+      #
+      # @return [Integer]
+      def total_events
+        @mutex.synchronize { @streams.values.sum(&:size) }
+      end
+
       private
 
       def matches_type?(event, type)

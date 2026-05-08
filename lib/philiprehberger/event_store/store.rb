@@ -72,6 +72,19 @@ module Philiprehberger
         end
       end
 
+      # Return the most recently appended event in a stream without
+      # materializing the rest of the stream.
+      #
+      # @param stream [String, Symbol] the stream name
+      # @return [Object, nil] the last event or nil for an empty/missing stream
+      def last(stream)
+        stream = stream.to_s
+        @mutex.synchronize do
+          entries = @streams[stream]
+          entries && !entries.empty? ? entries.last[:event] : nil
+        end
+      end
+
       # Read all events from all streams, ordered by global position.
       #
       # @return [Array] all events across all streams

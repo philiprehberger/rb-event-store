@@ -137,6 +137,7 @@ store.read_all        # => all events across all streams, ordered by position
 store.streams         # => ['orders', ...]
 store.version(:orders) # => 5 (event count in stream)
 store.total_events    # => 8 (sum of events across all streams)
+store.last(:orders)   # => last appended event, or nil if empty/missing
 ```
 
 ## API
@@ -146,6 +147,7 @@ store.total_events    # => 8 (sum of events across all streams)
 | `.new` | Create a new event store |
 | `#append(stream, event)` | Append an event to a stream |
 | `#read(stream)` | Read all events from a stream |
+| `#last(stream)` | Return the most recently appended event, or nil for an empty/missing stream |
 | `#read_all` | Read all events across all streams |
 | `#query(stream:, type:, after:, before:, limit:)` | Query events with filters |
 | `#subscribe(stream) { \|e\| }` | Subscribe to new events on a stream |

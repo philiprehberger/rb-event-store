@@ -504,4 +504,39 @@ RSpec.describe Philiprehberger::EventStore do
       expect(store.read(:stream).length).to eq(250)
     end
   end
+
+  describe '#last' do
+    let(:store) { described_class.new }
+
+    it 'returns nil for a missing stream' do
+      expect(store.last(:nope)).to be_nil
+    end
+
+    it 'returns nil for an empty stream after clear' do
+      store.append(:s, { type: 'A' })
+      store.clear(:s)
+      expect(store.last(:s)).to be_nil
+    end
+
+    it 'returns the most recently appended event' do
+      store.append(:s, { type: 'A', n: 1 })
+      store.append(:s, { type: 'A', n: 2 })
+      store.append(:s, { type: 'A', n: 3 })
+
+      expect(store.last(:s)).to eq(type: 'A', n: 3)
+    end
+
+    it 'tracks the last event across appends' do
+      store.append(:s, { type: 'A' })
+      expect(store.last(:s)).to eq(type: 'A')
+
+      store.append(:s, { type: 'B' })
+      expect(store.last(:s)).to eq(type: 'B')
+    end
+
+    it 'accepts symbol and string stream names equivalently' do
+      store.append('s', { type: 'A' })
+      expect(store.last(:s)).to eq(type: 'A')
+    end
+  end
 end

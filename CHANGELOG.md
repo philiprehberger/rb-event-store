@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-05-08
+
+### Added
+- `Store#last(stream)` — returns the most recently appended event in a stream (or `nil` for an empty/missing stream) without materializing the rest of the stream. Replaces the common `read(stream).last` idiom for last-event lookups.
+
 ## [0.4.0] - 2026-04-24
 
 ### Added
